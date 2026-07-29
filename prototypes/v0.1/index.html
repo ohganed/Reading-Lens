@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Reading Lens v0.1</title>
+<style>
+:root{--bg:#f4f1ea;--paper:#fffdf8;--ink:#25231f;--muted:#6c685f;--panel:rgba(255,255,255,.94);--border:#d9d3c7;--accent:#2e6157}
+*{box-sizing:border-box}html,body{height:100%}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",sans-serif;overflow:hidden}
+.app{height:100%;display:grid;grid-template-rows:auto 1fr}.topbar{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--border);z-index:30;box-shadow:0 2px 12px rgba(0,0,0,.05)}
+.brand{font-weight:700;letter-spacing:.02em;margin-right:auto}.brand small{font-weight:500;color:var(--muted)}button,select,input{font:inherit}button{border:1px solid var(--border);background:white;border-radius:9px;padding:7px 11px;cursor:pointer;color:var(--ink)}button:hover{background:#f8f6f1}button.primary{background:var(--accent);color:white;border-color:var(--accent)}
+.workspace{position:relative;overflow:hidden}.reader{position:absolute;inset:0;overflow:auto;padding:64px max(7vw,48px) 120px}.paper{max-width:840px;margin:0 auto;background:var(--paper);padding:62px 72px;min-height:1200px;box-shadow:0 8px 36px rgba(56,48,35,.12);border-radius:4px;line-height:2.05;font-size:20px;letter-spacing:.02em}.paper h1{font-size:30px;line-height:1.35;margin:0 0 30px}.paper p{margin:0 0 1.4em}.hint{color:var(--muted);font-size:14px;margin-bottom:28px}
+.mask{position:absolute;inset:0;pointer-events:none;z-index:10;background:rgba(20,20,20,var(--opacity,.62));-webkit-mask-image:linear-gradient(#000 0 0),linear-gradient(#000 0 0);mask-image:linear-gradient(#000 0 0),linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.lens{position:absolute;z-index:11;pointer-events:auto;border:1px solid rgba(255,255,255,.45);box-shadow:0 0 0 1px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.12);cursor:grab;touch-action:none}.lens:active{cursor:grabbing}.lens.soft{box-shadow:0 0 20px 10px rgba(255,255,255,.14),0 8px 24px rgba(0,0,0,.12)}
+.panel{position:absolute;right:18px;top:18px;width:300px;max-height:calc(100% - 36px);overflow:auto;z-index:25;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:15px;box-shadow:0 12px 36px rgba(0,0,0,.16)}.panel.hidden{display:none}.panel h2{font-size:16px;margin:0 0 12px}.row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;margin:11px 0}.row label{font-size:13px;color:#4b4842}.row output{font-size:12px;color:var(--muted);min-width:48px;text-align:right}.row input[type=range]{grid-column:1/-1;width:100%}.seg{display:grid;grid-template-columns:1fr 1fr;gap:7px}.seg button.active{background:#e5efec;border-color:#9dbbb3;color:#204c43;font-weight:650}.keys{font-size:12px;color:var(--muted);line-height:1.65;border-top:1px solid var(--border);padding-top:10px;margin-top:12px}.status{position:absolute;left:18px;bottom:18px;z-index:24;background:rgba(255,255,255,.9);border:1px solid var(--border);border-radius:999px;padding:7px 11px;font-size:12px;color:var(--muted)}
+@media(max-width:760px){.topbar{gap:6px}.brand small{display:none}.paper{padding:42px 28px;font-size:18px}.reader{padding:34px 16px 90px}.panel{left:12px;right:12px;width:auto;top:12px}.topbar .optional{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">Reading Lens <small>v0.1 · 感覚検証版</small></div>
+    <button id="play" class="primary">開始</button>
+    <button id="togglePanel">設定</button>
+    <button id="reset" class="optional">初期化</button>
+  </header>
+  <main class="workspace" id="workspace">
+    <div class="reader" id="reader">
+      <article class="paper" id="paper">
+        <h1>読む範囲を狭めると、思考は広がるだろうか</h1>
+        <div class="hint">この文章はReading Lensの動きを試すためのテスト文章です。内容理解よりも、視線と心理の感覚を観察してください。</div>
+        <p>文章を読むとき、私たちの目は文字の列だけを見ているわけではありません。現在読んでいる行の上には、すでに読んだ文章があります。下には、まだ読んでいない文章があります。ページ全体の大きさや段落の長さも、同時に視界へ入っています。</p>
+        <p>それらの情報は、文脈を保つために役立つことがあります。しかし、いつでも同じように役立つとは限りません。疲れているとき、難しい文章を読むとき、あるいは一つの文を丁寧に考えたいときには、周囲の文字が現在の理解へ入り込み、注意を細かく分散させることがあります。</p>
+        <p>紙の上に定規を置き、上下の文章を隠すと、見える範囲は狭くなります。それにもかかわらず、心理的には空間が広くなったように感じることがあります。読むべき場所を探し続けなくてよいからです。現在の一行を維持する仕事の一部を、道具が引き受けてくれます。</p>
+        <p>Reading Lensは、読む速度を上げるための装置ではありません。視線を機械的に運搬することも目的ではありません。むしろ、止まること、戻ること、考えることを守りながら、不要な視覚情報だけを弱めます。</p>
+        <p>重要なのは、窓が先に進み、読者が追いかける状態を作らないことです。窓は命令ではなく、静かな足場である必要があります。自動移動が役立つ場面もあれば、手動で一段ずつ送る方が自然な場面もあります。</p>
+        <p>この試作では、Reading WindowとSearchlightという二つの見え方を比較します。窓の高さ、幅、周囲の濃さ、移動速度を変えながら、視線が落ち着く地点を探してください。最も速く読める設定ではなく、最も追い立てられずに理解できる設定が重要です。</p>
+        <p>読み返したくなったときは、迷わず戻ってください。止まりたくなったときは停止してください。その行動が自然にできるかどうかも、この実験の一部です。道具が自由を減らしてしまうなら、その設計は修正されなければなりません。</p>
+        <p>最後に、周囲が完全に見えない場合と、薄く見える場合を比べてください。前後の文脈が安心を与えることもあります。一方で、文章量が圧迫感を生むこともあります。適切な濃度は一つではなく、文章の難しさやその日の状態によって変わるかもしれません。</p>
+      </article>
+    </div>
+    <div class="mask" id="mask"></div>
+    <div class="lens soft" id="lens" aria-label="Reading Lens"></div>
+    <section class="panel" id="panel">
+      <h2>Lens設定</h2>
+      <div class="seg"><button id="windowMode" class="active">Reading Window</button><button id="searchMode">Searchlight</button></div>
+      <div class="row"><label>幅</label><output id="widthOut"></output><input id="width" type="range" min="120" max="900" step="10"></div>
+      <div class="row"><label>高さ</label><output id="heightOut"></output><input id="height" type="range" min="32" max="220" step="4"></div>
+      <div class="row"><label>周辺マスク</label><output id="opacityOut"></output><input id="opacity" type="range" min="0.15" max="0.95" step="0.05"></div>
+      <div class="row"><label>移動速度</label><output id="speedOut"></output><input id="speed" type="range" min="20" max="260" step="10"></div>
+      <div class="row"><label>横ステップ</label><output id="stepOut"></output><input id="step" type="range" min="10" max="140" step="5"></div>
+      <div class="row"><label>行送り量</label><output id="lineOut"></output><input id="lineStep" type="range" min="28" max="100" step="2"></div>
+      <div class="row"><label>境界</label><button id="softness">柔らかい</button></div>
+      <div class="keys">ドラッグ：Lens移動<br>矢印：上下左右へ移動<br>Shift＋左右：小さくステップ送り<br>Space：開始／一時停止<br>R：初期化　S：設定表示切替</div>
+    </section>
+    <div class="status" id="status">停止中 · Reading Window</div>
+  </main>
+</div>
+<script>
+const defaults={mode:'window',x:110,y:150,width:680,height:76,opacity:.62,speed:75,step:55,lineStep:48,soft:true};
+let state={...defaults,...JSON.parse(localStorage.getItem('readingLensV01')||'{}')};
+let playing=false,last=0,drag=null;
+const $=id=>document.getElementById(id); const workspace=$('workspace'),lens=$('lens'),mask=$('mask'),reader=$('reader');
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function save(){localStorage.setItem('readingLensV01',JSON.stringify(state))}
+function render(){
+ const r=workspace.getBoundingClientRect(); state.width=clamp(state.width,80,r.width-8); state.height=clamp(state.height,24,r.height-8); state.x=clamp(state.x,0,r.width-state.width); state.y=clamp(state.y,0,r.height-state.height);
+ lens.style.left=state.x+'px';lens.style.top=state.y+'px';lens.style.width=state.width+'px';lens.style.height=state.height+'px';lens.style.borderRadius=state.mode==='search'?'18px':'10px';lens.classList.toggle('soft',state.soft);
+ mask.style.setProperty('--opacity',state.opacity);const x=state.x,y=state.y,w=state.width,h=state.height;
+ mask.style.webkitMaskImage=`linear-gradient(#000 0 0), linear-gradient(#000 0 0)`;mask.style.webkitMaskPosition=`0 0, ${x}px ${y}px`;mask.style.webkitMaskSize=`100% 100%, ${w}px ${h}px`;mask.style.webkitMaskRepeat='no-repeat';
+ mask.style.maskImage=`linear-gradient(#000 0 0), linear-gradient(#000 0 0)`;mask.style.maskPosition=`0 0, ${x}px ${y}px`;mask.style.maskSize=`100% 100%, ${w}px ${h}px`;mask.style.maskRepeat='no-repeat';
+ $('width').value=state.width;$('height').value=state.height;$('opacity').value=state.opacity;$('speed').value=state.speed;$('step').value=state.step;$('lineStep').value=state.lineStep;
+ $('widthOut').value=Math.round(state.width)+' px';$('heightOut').value=Math.round(state.height)+' px';$('opacityOut').value=Math.round(state.opacity*100)+'%';$('speedOut').value=state.speed+' px/s';$('stepOut').value=state.step+' px';$('lineOut').value=state.lineStep+' px';
+ $('windowMode').classList.toggle('active',state.mode==='window');$('searchMode').classList.toggle('active',state.mode==='search');$('softness').textContent=state.soft?'柔らかい':'明確';$('play').textContent=playing?'一時停止':'開始';$('status').textContent=(playing?'移動中':'停止中')+' · '+(state.mode==='window'?'Reading Window':'Searchlight');save();
+}
+function setMode(mode){state.mode=mode;if(mode==='search'){state.width=Math.min(state.width,300);state.height=Math.min(state.height,64)}else{state.width=Math.max(state.width,560);state.height=Math.max(state.height,72)}render()}
+function move(dx,dy){state.x+=dx;state.y+=dy;render()}
+function togglePlay(){playing=!playing;last=performance.now();render();if(playing)requestAnimationFrame(tick)}
+function tick(t){if(!playing)return;const dt=Math.min((t-last)/1000,.05);last=t;state.x+=state.speed*dt;const r=workspace.getBoundingClientRect();if(state.x+state.width>=r.width-8){state.x=16;state.y+=state.lineStep;if(state.y+state.height>r.height-12){state.y=20;reader.scrollBy({top:Math.max(180,state.lineStep*4),behavior:'smooth'})}}render();requestAnimationFrame(tick)}
+['width','height','opacity','speed','step','lineStep'].forEach(id=>$(id).addEventListener('input',e=>{state[id]=Number(e.target.value);render()}));
+$('windowMode').onclick=()=>setMode('window');$('searchMode').onclick=()=>setMode('search');$('play').onclick=togglePlay;$('softness').onclick=()=>{state.soft=!state.soft;render()};$('togglePanel').onclick=()=>$('panel').classList.toggle('hidden');
+$('reset').onclick=reset;function reset(){state={...defaults};playing=false;reader.scrollTop=0;render()}
+lens.addEventListener('pointerdown',e=>{drag={dx:e.clientX-state.x,dy:e.clientY-state.y};lens.setPointerCapture(e.pointerId)});lens.addEventListener('pointermove',e=>{if(!drag)return;state.x=e.clientX-drag.dx;state.y=e.clientY-drag.dy;render()});lens.addEventListener('pointerup',()=>drag=null);
+window.addEventListener('keydown',e=>{if(['INPUT','SELECT'].includes(document.activeElement.tagName))return;let handled=true;const small=e.shiftKey?state.step:18;switch(e.key){case'ArrowLeft':move(-small,0);break;case'ArrowRight':move(small,0);break;case'ArrowUp':move(0,-state.lineStep);break;case'ArrowDown':move(0,state.lineStep);break;case' ':togglePlay();break;case'r':case'R':reset();break;case's':case'S':$('panel').classList.toggle('hidden');break;default:handled=false}if(handled)e.preventDefault()});
+window.addEventListener('resize',render);render();
+</script>
+</body>
+</html>
