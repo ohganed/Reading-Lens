@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#f5f3ee" />
+  <title>English Reading Studio</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <style>
+    :root {
+      --bg: #f5f3ee;
+      --panel: #ffffff;
+      --text: #1d1d1f;
+      --muted: #6e6e73;
+      --line: #d9d7d2;
+      --accent: #355c7d;
+      --accent-soft: #e8eef4;
+      --danger: #8a3b3b;
+      --shadow: 0 12px 32px rgba(0,0,0,.10);
+      --radius: 18px;
+      --fontSize: 22px;
+      --lineHeight: 1.9;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+    }
+    body.dark {
+      --bg:#141414; --panel:#1e1e1e; --text:#f3f3f3; --muted:#aaa;
+      --line:#3a3a3a; --accent:#9cc3e5; --accent-soft:#263746;
+      --shadow:0 12px 32px rgba(0,0,0,.35);
+    }
+    header {
+      position: sticky; top:0; z-index:20;
+      background: color-mix(in srgb, var(--bg) 92%, transparent);
+      backdrop-filter: blur(14px);
+      border-bottom:1px solid var(--line);
+    }
+    .topbar {
+      max-width:1200px; margin:auto; padding:10px 14px;
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    }
+    .brand { font-weight:800; letter-spacing:.02em; margin-right:auto; }
+    button, select, textarea, input { font:inherit; }
+    .btn, .icon-btn, select, input[type="range"] {
+      border:1px solid var(--line); background:var(--panel); color:var(--text);
+      border-radius:12px; padding:9px 12px;
+    }
+    .btn { cursor:pointer; }
+    .btn.primary { background:var(--accent); color:white; border-color:var(--accent); }
+    .btn.soft { background:var(--accent-soft); }
+    .icon-btn { width:42px; height:42px; display:grid; place-items:center; padding:0; cursor:pointer; }
+    main { max-width:1200px; margin:0 auto; padding:18px 14px 110px; }
+    .grid { display:grid; grid-template-columns:minmax(300px,.9fr) minmax(360px,1.5fr); gap:18px; }
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+    .card h2 { font-size:16px; margin:0; }
+    .card-head { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 16px; border-bottom:1px solid var(--line); }
+    .card-body { padding:16px; }
+    textarea { width:100%; min-height:280px; resize:vertical; border:1px solid var(--line); border-radius:14px; padding:14px; background:var(--bg); color:var(--text); line-height:1.6; }
+    .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .stack { display:grid; gap:12px; }
+    .small { font-size:13px; color:var(--muted); }
+    .mode-tabs { display:flex; flex-wrap:wrap; gap:7px; }
+    .mode-chip { border:1px solid var(--line); background:var(--panel); color:var(--text); padding:7px 10px; border-radius:999px; cursor:pointer; font-size:13px; }
+    .mode-chip.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .reader { min-height:520px; padding:26px; font-family: Georgia, "Times New Roman", serif; font-size:var(--fontSize); line-height:var(--lineHeight); }
+    .reader p { margin:0 0 1.2em; }
+    .annotated { text-decoration: underline dotted; text-decoration-thickness:1.5px; text-underline-offset:5px; cursor:pointer; border-radius:4px; }
+    .annotated:hover { background:var(--accent-soft); }
+    .sentence { transition:opacity .2s, background .2s; border-radius:8px; }
+    body.focus-mode .sentence:not(.active-sentence) { opacity:.18; }
+    body.focus-mode .active-sentence { background:var(--accent-soft); }
+    .tooltip {
+      position:fixed; z-index:1000; max-width:min(320px,85vw); background:var(--text); color:var(--bg);
+      border-radius:12px; padding:10px 12px; box-shadow:var(--shadow); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      font-size:15px; line-height:1.4; pointer-events:none; transform:translate(-50%,-100%); display:none;
+    }
+    .tooltip::after { content:""; position:absolute; left:50%; top:100%; transform:translateX(-50%); border:7px solid transparent; border-top-color:var(--text); }
+    .tooltip .pron { display:block; font-size:12px; opacity:.72; margin-top:4px; }
+    .prompt-box { white-space:pre-wrap; background:var(--bg); border:1px solid var(--line); border-radius:14px; padding:14px; max-height:380px; overflow:auto; font-size:14px; line-height:1.55; }
+    .settings-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .setting { border:1px solid var(--line); border-radius:14px; padding:12px; background:var(--bg); }
+    .setting label { display:block; font-size:12px; color:var(--muted); margin-bottom:8px; }
+    .setting input[type="range"] { width:100%; padding:0; }
+    .stats { display:flex; gap:14px; color:var(--muted); font-size:12px; flex-wrap:wrap; }
+    .bottom-nav { display:none; }
+    .sheet-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.36); z-index:60; }
+    .sheet { display:none; position:fixed; left:0; right:0; bottom:0; z-index:70; background:var(--panel); border-radius:22px 22px 0 0; box-shadow:0 -18px 50px rgba(0,0,0,.24); max-height:86vh; overflow:auto; padding-bottom:calc(18px + env(safe-area-inset-bottom)); }
+    .sheet.open, .sheet-backdrop.open { display:block; }
+    .sheet-head { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 16px; position:sticky; top:0; background:var(--panel); border-bottom:1px solid var(--line); z-index:2; }
+    .sheet-body { padding:16px; }
+    .mobile-anchor { scroll-margin-top:72px; }
+    @media (max-width: 820px) {
+      .grid { grid-template-columns:1fr; }
+      .reader { padding:20px 16px 90px; min-height:360px; }
+      main { padding-bottom:110px; }
+      .settings-grid { grid-template-columns:1fr; }
+      .bottom-nav {
+        position:fixed; left:0; right:0; bottom:0; z-index:50; display:grid; grid-template-columns:repeat(3,1fr);
+        border-top:1px solid var(--line); background:color-mix(in srgb,var(--panel) 94%,transparent); backdrop-filter:blur(14px);
+        padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+      }
+      .bottom-nav a, .bottom-nav button { border:0; background:transparent; color:var(--text); text-decoration:none; font-size:12px; min-height:48px; border-radius:12px; display:grid; place-items:center; cursor:pointer; }
+      .topbar .desktop-only { display:none; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="topbar">
+    <div class="brand">English Reading Studio</div>
+    <button class="btn desktop-only" id="focusBtn">集中モード</button>
+    <button class="btn desktop-only" id="speakBtn">読み上げ</button>
+    <button class="icon-btn" id="themeBtn" title="表示テーマ">◐</button>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+    <section class="card" id="sourceSection">
+      <div class="card-head"><h2>英文・整形済みテキスト</h2><span class="small" id="saveStatus">自動保存</span></div>
+      <div class="card-body stack">
+        <div class="mode-tabs" id="modeTabs"></div>
+        <div class="small" id="modeDesc"></div>
+        <textarea id="sourceText" spellcheck="false" placeholder="英文を貼り付けてください。整形済み形式: [English|pronunciation|日本語の意味]"></textarea>
+        <div class="row">
+          <button class="btn primary" id="renderBtn">表示を更新</button>
+          <button class="btn" id="copyFromModeBtn">別モードから複製</button>
+          <button class="btn" id="clearBtn">クリア</button>
+        </div>
+        <div class="stats" id="stats"></div>
+      </div>
+    </section>
+
+    <section class="card mobile-anchor" id="readerSection">
+      <div class="card-head">
+        <h2>Reading</h2>
+        <div class="row">
+          <button class="icon-btn" id="prevBtn" title="前の文">←</button>
+          <button class="icon-btn" id="nextBtn" title="次の文">→</button>
+        </div>
+      </div>
+      <article class="reader" id="reader"></article>
+    </section>
+  </div>
+
+  <section class="card mobile-anchor" id="promptSection" style="margin-top:18px">
+    <div class="card-head"><h2>✨ AI整形用プロンプト</h2><span class="small">ChatGPTなどに貼り付けるためのプロンプトです。</span></div>
+    <div class="card-body stack">
+      <div class="small">プロンプトだけ、または現在の英文付きでコピーできます。選択モードに合わせて内容が変わります。</div>
+      <div class="prompt-box" id="promptBox">Rewrite the English text below for use in an interactive English reading application for Japanese learners.
+
+OUTPUT FORMAT
+Keep the original English sentence order and punctuation. Add annotations in this exact format:
+[English surface form|pronunciation support|natural Japanese meaning]
+
+CORE RULES
+1. Do not translate or summarize the whole passage.
+2. Do not rewrite the English itself unless needed to preserve an idiom or multi-word expression as one annotation unit.
+3. Prefer meaningful chunks over isolated words. Phrasal verbs, idioms, collocations, fixed expressions, and meaningful noun phrases should be annotated as one unit whenever that gives the learner the correct meaning.
+4. Do not split expressions such as “take part in”, “look forward to”, “as a result of”, or “make a decision” into misleading word-by-word meanings.
+5. Japanese meanings should match the meaning in this specific sentence, not merely a dictionary's first definition.
+6. Pronunciation support should be concise and readable. IPA is preferred where practical.
+7. Preserve paragraphs.
+8. Output only the formatted English passage. Do not add explanations before or after it.
+
+ANNOTATION MODE
+CHUNK-FOCUSED MODE: Prioritize phrasal verbs, idioms, collocations, fixed expressions, meaningful noun phrases, and important individual vocabulary. Do not annotate easy function words unless necessary for understanding.</div>
+      <div class="row">
+        <button class="btn primary" id="copyPromptBtn">プロンプトだけコピー</button>
+        <button class="btn" id="copyPromptTextBtn">現在の英文＋プロンプト</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card mobile-anchor" id="settingsSection" style="margin-top:18px">
+    <div class="card-head"><h2>⚙️ 読書設定</h2></div>
+    <div class="card-body">
+      <div class="settings-grid">
+        <div class="setting"><label>文字サイズ <span id="fontSizeLabel"></span></label><input id="fontSize" type="range" min="16" max="38" value="22"></div>
+        <div class="setting"><label>行間 <span id="lineHeightLabel"></span></label><input id="lineHeight" type="range" min="14" max="26" value="19"></div>
+        <div class="setting"><label>読み上げ速度 <span id="rateLabel"></span></label><input id="speechRate" type="range" min="5" max="16" value="9"></div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="focusBtn2">集中モード</button>
+        <button class="btn" id="speakBtn2">読み上げ</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="tooltip" id="tooltip"></div>
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+
+<section class="sheet" id="promptSheet" aria-hidden="true">
+  <div class="sheet-head"><strong>✨ AI整形</strong><button class="icon-btn" id="mobilePromptCloseBtn" aria-label="閉じる" type="button" onclick="window.__readerCloseSheets && window.__readerCloseSheets()">×</button></div>
+  <div class="sheet-body stack">
+    <div class="small">現在のモード</div>
+    <select id="mobileModeSelect"></select>
+    <div class="prompt-box" id="mobilePromptBox"></div>
+    <button class="btn primary" id="mobileCopyPromptBtn">プロンプトだけコピー</button>
+    <button class="btn" id="mobileCopyWithTextBtn">現在の英文＋プロンプト</button>
+  </div>
+</section>
+
+<section class="sheet" id="settingsSheet" aria-hidden="true">
+  <div class="sheet-head"><strong>⚙️ 設定</strong><button class="icon-btn" id="mobileSettingsCloseBtn" aria-label="閉じる" type="button">×</button></div>
+  <div class="sheet-body stack">
+    <button class="btn" id="mobileThemeBtn">ダークモード切替</button>
+    <button class="btn" id="mobileFocusBtn">集中モード切替</button>
+    <button class="btn" id="mobileSpeakBtn">読み上げ</button>
+    <a class="btn" href="#settingsSection" style="text-decoration:none; text-align:center">詳細設定へ移動</a>
+  </div>
+</section>
+
+<nav class="bottom-nav" aria-label="mobile navigation">
+  <a href="#readerSection" id="mobileReadLink">📖<span>読む</span></a>
+  <a href="#promptSection" id="mobilePromptLink">✨<span>AI整形</span></a>
+  <a href="#settingsSection" id="mobileSettingsLink">⚙️<span>設定</span></a>
+</nav>
+
+<script>
+(function(){
+  "use strict";
+
+  const MODES = {
+    chunk: {
+      label:"チャンク重視",
+      desc:"句動詞・イディオム・コロケーションなど、意味のまとまりを優先します。",
+      rule:"CHUNK-FOCUSED MODE: Prioritize phrasal verbs, idioms, collocations, fixed expressions, meaningful noun phrases, and important individual vocabulary. Do not annotate easy function words unless necessary for understanding."
+    },
+    beginner: {
+      label:"初級サポート A1–B1",
+      desc:"初級〜中級前半の学習者が迷いそうな語句を広めに注釈します。",
+      rule:"A1–B1 SUPPORT MODE: Annotate expressions and individual words that an A1–B1 learner may not know. Prefer chunks where words form a meaningful expression. Leave only extremely basic grammar/function words unannotated when their meaning is obvious."
+    },
+    content: {
+      label:"全内容語",
+      desc:"名詞・主要動詞・形容詞・副詞を原則すべてクリック可能にします。",
+      rule:"ALL CONTENT WORDS MODE: Annotate essentially every content word: nouns, lexical verbs, adjectives, and adverbs. Also combine words into phrasal verbs, idioms, collocations, fixed expressions, and meaningful multi-word units instead of giving misleading isolated meanings."
+    },
+    full: {
+      label:"完全サポート",
+      desc:"機能語も含め、ほぼすべての語を確認できる最大注釈モードです。",
+      rule:"FULL SUPPORT MODE: Make almost every word or meaningful unit clickable, including function words when useful. However, never destroy a multi-word expression by annotating each component separately. The longest natural meaning unit has priority over word-by-word annotation."
+    },
+    toeic: {
+      label:"TOEIC",
+      desc:"TOEIC頻出語彙・ビジネス表現・定型表現を優先します。",
+      rule:"TOEIC MODE: Prioritize TOEIC-relevant vocabulary, workplace/business expressions, formal verbs, collocations, common test paraphrases, and expressions whose meaning is easy to misread. Basic vocabulary may remain unannotated unless it has a context-specific meaning."
+    },
+    news: {
+      label:"ニュース英語",
+      desc:"政治・経済・国際報道などで重要な語句や報道表現を優先します。",
+      rule:"NEWS ENGLISH MODE: Prioritize political, economic, diplomatic, legal, military, institutional, and journalistic vocabulary and expressions. Annotate compact noun phrases and reporting collocations as meaningful units when that better captures the actual news meaning."
+    }
+  };
+
+  const BASE_PROMPT = `Rewrite the English text below for use in an interactive English reading application for Japanese learners.
+
+OUTPUT FORMAT
+Keep the original English sentence order and punctuation. Add annotations in this exact format:
+[English surface form|pronunciation support|natural Japanese meaning]
+
+CORE RULES
+1. Do not translate or summarize the whole passage.
+2. Do not rewrite the English itself unless needed to preserve an idiom or multi-word expression as one annotation unit.
+3. Prefer meaningful chunks over isolated words. Phrasal verbs, idioms, collocations, fixed expressions, and meaningful noun phrases should be annotated as one unit whenever that gives the learner the correct meaning.
+4. Do not split expressions such as “take part in”, “look forward to”, “as a result of”, or “make a decision” into misleading word-by-word meanings.
+5. Japanese meanings should match the meaning in this specific sentence, not merely a dictionary's first definition.
+6. Pronunciation support should be concise and readable. IPA is preferred where practical.
+7. Preserve paragraphs.
+8. Output only the formatted English passage. Do not add explanations before or after it.
+
+ANNOTATION MODE
+`;
+
+  const el = id => document.getElementById(id);
+  const reader = el("reader"), source = el("sourceText"), tooltip = el("tooltip");
+  let currentMode = "chunk", sentenceIndex = 0, utterance = null;
+
+  const memory = {};
+  function safeGet(key, fallback="") { try { const v = localStorage.getItem(key); return v === null ? fallback : v; } catch(e) { return memory[key] ?? fallback; } }
+  function safeSet(key, value) { try { localStorage.setItem(key, value); } catch(e) { memory[key] = value; } }
+
+  function modeKey(m){ return "englishReading.text."+m; }
+  function getPrompt(){ return BASE_PROMPT + MODES[currentMode].rule; }
+  function updatePrompt(){
+    const p = getPrompt();
+    if (el("promptBox")) el("promptBox").textContent = p;
+    if (el("mobilePromptBox")) el("mobilePromptBox").textContent = p;
+    if (el("modeDesc")) el("modeDesc").textContent = MODES[currentMode].desc;
+  }
+
+  function buildModes(){
+    const tabs = el("modeTabs"); tabs.innerHTML="";
+    const sel = el("mobileModeSelect"); sel.innerHTML="";
+    Object.entries(MODES).forEach(([key,m])=>{
+      const b=document.createElement("button"); b.type="button"; b.className="mode-chip"+(key===currentMode?" active":""); b.textContent=m.label;
+      b.onclick=()=>switchMode(key); tabs.appendChild(b);
+      const o=document.createElement("option"); o.value=key; o.textContent=m.label; sel.appendChild(o);
+    });
+    sel.value=currentMode;
+  }
+
+  function switchMode(mode){
+    safeSet(modeKey(currentMode), source.value);
+    currentMode=mode; safeSet("englishReading.mode",mode);
+    source.value=safeGet(modeKey(mode),""); sentenceIndex=0;
+    buildModes(); updatePrompt(); render();
+  }
+
+  function escapeHtml(s){ return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+
+  function parseAnnotated(text){
+    const re=/\[([^\]|]+)\|([^\]|]*)\|([^\]]+)\]/g;
+    let out="", last=0, m;
+    while((m=re.exec(text))!==null){
+      out += escapeHtml(text.slice(last,m.index));
+      out += `<span class="annotated" data-pron="${escapeHtml(m[2])}" data-meaning="${escapeHtml(m[3])}">${escapeHtml(m[1])}</span>`;
+      last=re.lastIndex;
+    }
+    out += escapeHtml(text.slice(last));
+    return out;
+  }
+
+  function splitSentencesParagraph(text){
+    const parts = text.match(/[^.!?。！？]+[.!?。！？]+(?:["'”’)]*)|[^.!?。！？]+$/g);
+    return parts || [text];
+  }
+
+  function render(){
+    safeSet(modeKey(currentMode),source.value);
+    const paras=source.value.split(/\n\s*\n/).filter(p=>p.trim());
+    let sCount=0;
+    reader.innerHTML=paras.map(p=>{
+      const ss=splitSentencesParagraph(p.trim());
+      return "<p>"+ss.map(s=>`<span class="sentence" data-index="${sCount++}">${parseAnnotated(s)}</span>`).join(" ")+"</p>";
+    }).join("");
+    bindAnnotations(); updateFocus(); updateStats();
+  }
+
+  function bindAnnotations(){
+    reader.querySelectorAll(".annotated").forEach(node=>{
+      node.addEventListener("click",e=>{
+        e.stopPropagation();
+        const r=node.getBoundingClientRect();
+        const meaning=node.dataset.meaning||""; const pron=node.dataset.pron||"";
+        tooltip.innerHTML=escapeHtml(meaning)+(pron?`<span class="pron">${escapeHtml(pron)}</span>`:"");
+        tooltip.style.display="block";
+        tooltip.style.left=(r.left+r.width/2)+"px";
+        tooltip.style.top=Math.max(10,r.top-8)+"px";
+      });
+    });
+  }
+  document.addEventListener("click",()=>tooltip.style.display="none");
+  window.addEventListener("scroll",()=>tooltip.style.display="none",true);
+
+  function sentences(){ return [...reader.querySelectorAll(".sentence")]; }
+  function updateFocus(){
+    const ss=sentences(); if(!ss.length)return;
+    sentenceIndex=Math.max(0,Math.min(sentenceIndex,ss.length-1));
+    ss.forEach((s,i)=>s.classList.toggle("active-sentence",i===sentenceIndex));
+    if(document.body.classList.contains("focus-mode")) ss[sentenceIndex].scrollIntoView({block:"center",behavior:"smooth"});
+  }
+  function next(d){ sentenceIndex+=d; updateFocus(); }
+
+  function stripAnnotations(t){ return t.replace(/\[([^\]|]+)\|[^\]|]*\|[^\]]+\]/g,"$1"); }
+  function updateStats(){
+    const raw=stripAnnotations(source.value).trim();
+    const words=(raw.match(/\b[\w’'-]+\b/g)||[]).length;
+    const sentencesN=splitSentencesParagraph(raw).length;
+    const mins=words?Math.max(1,Math.round(words/180)):0;
+    el("stats").innerHTML=`<span>${words} words</span><span>${sentencesN} sentences</span><span>約 ${mins} 分</span>`;
+  }
+
+  function speak(){
+    if(!("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    const ss=sentences();
+    const text=document.body.classList.contains("focus-mode")&&ss[sentenceIndex]?ss[sentenceIndex].innerText:stripAnnotations(source.value);
+    utterance=new SpeechSynthesisUtterance(text); utterance.lang="en-US"; utterance.rate=parseInt(el("speechRate").value,10)/10; speechSynthesis.speak(utterance);
+  }
+
+  async function copyText(text){
+    try { if(navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(text); return true; } } catch(e){}
+    try {
+      const ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.focus(); ta.select();
+      const ok=document.execCommand("copy"); ta.remove(); return ok;
+    } catch(e){ return false; }
+  }
+  function flash(btn,text="コピーしました"){ const old=btn.textContent; btn.textContent=text; setTimeout(()=>btn.textContent=old,1200); }
+
+  function promptWithText(){ return getPrompt()+"\n\nTEXT TO FORMAT\n"+stripAnnotations(source.value); }
+
+  function openSheet(id){
+    closeSheets();
+    el("sheetBackdrop").classList.add("open");
+    const s=el(id); s.classList.add("open"); s.setAttribute("aria-hidden","false");
+  }
+  function closeSheets(){
+    el("sheetBackdrop").classList.remove("open");
+    ["promptSheet","settingsSheet"].forEach(id=>{const s=el(id); if(s){s.classList.remove("open"); s.setAttribute("aria-hidden","true");}});
+  }
+  window.__readerCloseSheets=closeSheets;
+
+  function initSettings(){
+    const f=el("fontSize"), l=el("lineHeight"), r=el("speechRate");
+    f.value=safeGet("englishReading.fontSize","22"); l.value=safeGet("englishReading.lineHeight","19"); r.value=safeGet("englishReading.speechRate","9");
+    function apply(){
+      document.documentElement.style.setProperty("--fontSize",f.value+"px");
+      document.documentElement.style.setProperty("--lineHeight",(parseInt(l.value,10)/10));
+      el("fontSizeLabel").textContent=f.value+"px"; el("lineHeightLabel").textContent=(parseInt(l.value,10)/10).toFixed(1); el("rateLabel").textContent=(parseInt(r.value,10)/10).toFixed(1)+"×";
+      safeSet("englishReading.fontSize",f.value); safeSet("englishReading.lineHeight",l.value); safeSet("englishReading.speechRate",r.value);
+    }
+    [f,l,r].forEach(x=>x.addEventListener("input",apply)); apply();
+    if(safeGet("englishReading.dark","0")==="1")document.body.classList.add("dark");
+  }
+
+  function toggleTheme(){ document.body.classList.toggle("dark"); safeSet("englishReading.dark",document.body.classList.contains("dark")?"1":"0"); }
+  function toggleFocus(){ document.body.classList.toggle("focus-mode"); updateFocus(); }
+
+  currentMode=safeGet("englishReading.mode","chunk"); if(!MODES[currentMode])currentMode="chunk";
+  source.value=safeGet(modeKey(currentMode),`[Reading deeply|ˈriːdɪŋ ˈdiːpli|深く読むこと] does not always mean reading slowly.\n\nWe should [move forward|muːv ˈfɔːrwərd|先へ進む] even when every detail is not clear.`);
+  buildModes(); updatePrompt(); initSettings(); render();
+
+  el("renderBtn").onclick=render;
+  el("clearBtn").onclick=()=>{source.value="";render();};
+  el("copyFromModeBtn").onclick=()=>{
+    const choices=Object.keys(MODES).filter(k=>k!==currentMode); const other=choices.find(k=>safeGet(modeKey(k),"").trim()) || choices[0];
+    if(other){source.value=safeGet(modeKey(other),"");render();}
+  };
+  el("prevBtn").onclick=()=>next(-1); el("nextBtn").onclick=()=>next(1);
+  ["focusBtn","focusBtn2","mobileFocusBtn"].forEach(id=>{if(el(id))el(id).onclick=toggleFocus;});
+  ["speakBtn","speakBtn2","mobileSpeakBtn"].forEach(id=>{if(el(id))el(id).onclick=speak;});
+  ["themeBtn","mobileThemeBtn"].forEach(id=>{if(el(id))el(id).onclick=toggleTheme;});
+  el("copyPromptBtn").onclick=async function(){if(await copyText(getPrompt()))flash(this);};
+  el("copyPromptTextBtn").onclick=async function(){if(await copyText(promptWithText()))flash(this);};
+  el("mobileCopyPromptBtn").onclick=async function(){if(await copyText(getPrompt()))flash(this);};
+  el("mobileCopyWithTextBtn").onclick=async function(){if(await copyText(promptWithText()))flash(this);};
+  el("mobileModeSelect").onchange=e=>switchMode(e.target.value);
+  el("sheetBackdrop").onclick=closeSheets;
+  el("mobilePromptCloseBtn").onclick=closeSheets; el("mobileSettingsCloseBtn").onclick=closeSheets;
+
+  const pLink=el("mobilePromptLink"), sLink=el("mobileSettingsLink");
+  if(pLink)pLink.addEventListener("click",e=>{ if(window.matchMedia("(max-width:820px)").matches){ e.preventDefault(); openSheet("promptSheet"); } });
+  if(sLink)sLink.addEventListener("click",e=>{ if(window.matchMedia("(max-width:820px)").matches){ e.preventDefault(); openSheet("settingsSheet"); } });
+
+  source.addEventListener("input",()=>{safeSet(modeKey(currentMode),source.value); el("saveStatus").textContent="保存済み";});
+
+  if("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+    window.addEventListener("load",()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+  }
+})();
+</script>
+</body>
+</html>
