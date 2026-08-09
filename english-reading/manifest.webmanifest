@@ -1,0 +1,10 @@
+{
+  "name": "English Reading Studio",
+  "short_name": "Reading Studio",
+  "description": "English reading application with selectable annotation modes for Japanese learners.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f3ee",
+  "theme_color": "#f5f3ee"
+}
